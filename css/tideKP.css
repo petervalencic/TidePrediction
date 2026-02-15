@@ -1,0 +1,113 @@
+.line0 line, .line12 line {
+    stroke: black;
+    stroke-width: 1.5;
+}
+
+#chart .c3-circles-data1 {
+    display: none;
+}
+
+#chart .c3-line-data1 {
+    stroke: blue;
+    stroke-width: 5px;
+}
+
+#chart .c3-line-data2 {
+    stroke: red;
+    stroke-width: 5px;
+}
+
+#chart .c3-line-data1 {
+    stroke: green;
+    stroke-width: 5px;
+}
+
+#chart .c3-lines-data2 {
+    display: none;
+}
+
+body {
+    margin-top: 10vh;
+}
+
+.tidal-buttons, #currtxt {
+    width: 100%;
+    margin: auto auto auto auto;
+    display: flex;
+    justify-content: left;
+    align-items: left;
+}
+
+#currtxt {
+    margin-left: 8vw;
+    margin-bottom: -5vw;
+}
+
+.tidal-buttons .inner {
+    margin-right: 5px;
+}
+
+@media only screen and (min-width: 769px) {
+    #currtxt {
+        margin-left: 5vw;
+        margin-bottom: -5vh;
+    }
+}
+@media only screen and (max-width: 769px) and (orientation: portrait) {
+    #currtxt {
+        margin-left: 13vw;
+        margin-bottom: -10vw;
+    }
+}
+
+@media only screen and (max-width: 769px) {
+    body {
+        background-color: black;
+    }
+    .line0 line, .line12 line {
+        stroke: white;
+        stroke-width: 1.5;
+    }
+    .c3 .c3-axis-x path, .c3 .c3-axis-x line {
+        stroke: white;
+    }
+    .c3 .c3-axis-y path, .c3 .c3-axis-y line {
+        stroke: white;
+    }
+    .c3 text.c3-text {
+        fill: white;
+        font-size: 4vh;
+    }
+    .tidal-buttons {
+        filter: invert(100%);
+    }
+    #currtxt {
+        color: white;
+    }
+    .c3-axis-y text {
+        fill: white;
+        font-size: 12px;
+    }
+    .c3-axis-x text {
+        font-size: 12px;
+        fill: white;
+    }
+    @media only screen and (orientation: portrait) {
+        .c3 text.c3-text {
+            font-size: 2vh;
+        }
+    }
+}
+
+@media only screen and (min-width: 770px) {
+    body {
+        width: 50%;
+    }
+}
+
+@media only print {
+    body {
+        orientation: landscape;
+        zoom:150%;
+    }
+}

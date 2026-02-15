@@ -1,0 +1,803 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Karamajćić 🦑</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <!-- External library for solar and lunar calculations -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+        <style>
+            body {
+                background-color: #f8fafc;
+            }
+            .card {
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            }
+            input[type="date"]::-webkit-calendar-picker-indicator {
+                cursor: pointer;
+            }
+            /* Custom scrollbar for the table container */
+            #extremesList::-webkit-scrollbar {
+                width: 4px;
+            }
+            #extremesList::-webkit-scrollbar-track {
+                background: #f1f5f9;
+            }
+            #extremesList::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 10px;
+            }
+        </style>
+    </head>
+    <body class="p-4 md:p-8">
+        <div class="max-w-6xl mx-auto">
+            <header class="mb-8">
+                <h1 class="text-3xl font-bold text-slate-800">
+                    Prognozirano plimovanje 🦑
+                </h1>
+                <p class="text-slate-500">
+                    Harmonična analiza z uporabo 7 primarnih komponent (M2, S2,
+                    N2, K2, K1, O1, P1)
+                </p>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <!-- Sidebar Controls -->
+                <aside class="lg:col-span-1 space-y-6">
+                    <section class="card p-6">
+                        <h2 class="text-lg font-semibold mb-4 border-b pb-2">
+                            Nastavitve napovedi
+                        </h2>
+                        <div class="space-y-4">
+                            <div>
+                                <label
+                                    class="block text-sm font-medium text-slate-700 mb-1"
+                                    >Izberi datum</label
+                                >
+                                <div class="flex items-center gap-2">
+                                    <button
+                                        id="prevDay"
+                                        title="Previous Day"
+                                        class="p-2 bg-slate-100 hover:bg-slate-200 rounded-md transition border border-slate-300"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="h-5 w-5 text-slate-600"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M15 19l-7-7 7-7"
+                                            />
+                                        </svg>
+                                    </button>
+                                    <input
+                                        type="date"
+                                        id="dateInput"
+                                        class="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 border text-sm"
+                                    />
+                                    <button
+                                        id="nextDay"
+                                        title="Next Day"
+                                        class="p-2 bg-slate-100 hover:bg-slate-200 rounded-md transition border border-slate-300"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="h-5 w-5 text-slate-600"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                stroke-width="2"
+                                                d="M9 5l7 7-7 7"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <button
+                                id="updateBtn"
+                                class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition font-medium shadow-sm"
+                            >
+                                Osveži podatke
+                            </button>
+                        </div>
+                    </section>
+
+                    <!-- Moon Phase Info -->
+                    <section class="card p-6">
+                        <h2 class="text-lg font-semibold mb-4 border-b pb-2">
+                            Lunine mene
+                        </h2>
+                        <div
+                            id="moonInfo"
+                            class="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-xl border border-slate-100 text-center"
+                        >
+                            <span id="moonEmoji" class="text-5xl mb-2">🌑</span>
+                            <span
+                                id="moonName"
+                                class="font-bold text-slate-800 uppercase tracking-tight"
+                                >Nova luna</span
+                            >
+                            <span
+                                id="moonAge"
+                                class="text-xs text-slate-500 mt-1"
+                                >Starost: 0.0 days</span
+                            >
+                        </div>
+                    </section>
+
+                    <section class="card p-6 flex flex-col h-[400px]">
+                        <h2 class="text-lg font-semibold mb-4 border-b pb-2">
+                            48 urni višinski ekstremi morja
+                        </h2>
+                        <div
+                            id="extremesList"
+                            class="overflow-y-auto pr-1 flex-grow"
+                        >
+                            <p class="text-slate-400 italic text-sm">
+                                Izberite datum za izračun najvišjih in najnižjih
+                                plim.
+                            </p>
+                        </div>
+                    </section>
+                </aside>
+
+                <!-- Main Content: Graph -->
+                <main class="lg:col-span-3 card p-6">
+                    <div
+                        class="flex flex-wrap justify-between items-center gap-4 mb-4"
+                    >
+                        <h2 class="text-xl font-semibold">
+                            48-Urno prognozirano plimovanje
+                        </h2>
+                        <div class="flex gap-2">
+                            <span
+                                class="text-[10px] font-bold uppercase tracking-wider bg-slate-100 px-3 py-1 rounded-full text-slate-600 border border-slate-200 flex items-center gap-1"
+                            >
+                                <span
+                                    class="w-2 h-2 rounded-full bg-slate-400"
+                                ></span>
+                                Nočni čas
+                            </span>
+                            <span
+                                id="locationTag"
+                                class="text-xs font-bold uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full text-blue-600 border border-blue-100"
+                            >
+                                Koper
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="relative h-[400px] w-full">
+                        <canvas id="tideChart"></canvas>
+                    </div>
+
+                    <div
+                        class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center"
+                    >
+                        <div
+                            class="bg-blue-50 p-4 rounded-xl border border-blue-100"
+                        >
+                            <span
+                                class="block text-xs text-blue-600 font-bold uppercase mb-1"
+                                >Višinska razlika plime/oseke</span
+                            >
+                            <span
+                                id="rangeStat"
+                                class="text-2xl font-bold text-blue-900"
+                                >--</span
+                            >
+                        </div>
+                        <div
+                            class="bg-slate-50 p-4 rounded-xl border border-slate-100"
+                        >
+                            <span
+                                class="block text-xs text-slate-600 font-bold uppercase mb-1"
+                            ></span>
+                            <span
+                                class="text-2xl font-bold text-slate-900"
+                            ></span>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+
+        <!-- JAVASCRIPT LOGIC -->
+        <script>
+            const STATION_LAT = 45.5481;
+            const STATION_LON = 13.7297;
+
+            class Arcots {
+                static get MA() {
+                    return ["M2", "S2", "N2", "K2", "K1", "01", "P1"];
+                }
+                static get H() {
+                    return [25.1, 15.8, 4.6, 4.4, 18.2, 5.0, 5.9];
+                }
+                static get G() {
+                    return [4.842, 4.955, 4.815, 4.752, 1.215, 1.079, 1.133];
+                }
+                static get S() {
+                    return [
+                        0.50586805, 0.52359878, 0.49636692, 0.52503234,
+                        0.26251617, 0.24335188, 0.26108261,
+                    ];
+                }
+
+                constructor(year) {
+                    this.year = year;
+                    this.F = new Float64Array(7);
+                    this.V0U = new Float64Array(7);
+                    this.DX = new Float64Array(5);
+                    this.DL = new Float64Array(3);
+                    this.FH = new Float64Array(7);
+                    this.FHS = new Float64Array(7);
+                    this.FHSS = new Float64Array(7);
+                    this.VUG = new Float64Array(7);
+                    this.A = new Float64Array(6);
+                    this.B = new Float64Array(7);
+                    this.C = new Float64Array(16);
+
+                    const yh = year + 0.5;
+                    this.nodfac(yh);
+                    this.vzerou(year, yh, 1);
+
+                    const H = Arcots.H;
+                    const S = Arcots.S;
+                    const G = Arcots.G;
+
+                    for (let l = 0; l < 7; l++) {
+                        this.FH[l] = this.F[l] * H[l];
+                        this.FHS[l] = this.FH[l] * S[l];
+                        this.FHSS[l] = this.FHS[l] * S[l];
+                        this.VUG[l] = this.V0U[l] - G[l];
+                    }
+                }
+
+                nodfac(y) {
+                    this.inuxi(y, 1);
+                    this.timcof(y);
+                    this.C[0] = Math.sin(this.DX[0]);
+                    this.C[1] = this.C[0] * this.C[0];
+                    this.C[2] = Math.sin(2.0 * this.DX[0]);
+                    this.C[3] =
+                        Math.cos(this.DX[0] / 2.0) * Math.cos(this.DX[0] / 2.0);
+                    this.F[0] = this.B[0] * Math.pow(this.C[3], 4);
+                    this.F[1] = 1.0;
+                    this.F[2] = this.F[0];
+                    this.F[3] = Math.sqrt(
+                        this.B[2] * Math.pow(this.C[1], 2) +
+                            this.B[5] * this.C[1] * Math.cos(2.0 * this.DX[1]) +
+                            this.B[6],
+                    );
+                    this.F[4] = Math.sqrt(
+                        this.B[1] * Math.pow(this.C[2], 2) +
+                            this.B[4] * this.C[2] * Math.cos(this.DX[1]) +
+                            this.B[6],
+                    );
+                    this.F[5] = this.B[3] * this.C[0] * this.C[3];
+                    this.F[6] = 1.0;
+                }
+
+                inuxi(y, ird) {
+                    this.timcof(y);
+                    const dn = this.nlong(y, 1);
+                    this.C[1] = Math.tan(dn / 2.0);
+                    this.C[2] = Math.atan(this.A[2] * this.C[1]);
+                    this.DX[0] = Math.acos(
+                        this.A[0] - this.A[1] * Math.cos(dn),
+                    );
+                    this.C[3] = Math.sin(2.0 * this.DX[0]);
+                    this.C[4] = Math.pow(Math.sin(this.DX[0]), 2);
+                    this.DX[1] = this.C[2] - Math.atan(this.A[3] * this.C[1]);
+                    this.DX[2] = Math.atan(
+                        (this.C[3] * Math.sin(this.DX[1])) /
+                            (this.A[4] + this.C[3] * Math.cos(this.DX[1])),
+                    );
+                    this.DX[3] = Math.atan(
+                        (this.C[4] * Math.sin(2.0 * this.DX[1])) /
+                            (this.A[5] +
+                                this.C[4] * Math.cos(2.0 * this.DX[1])),
+                    );
+                    this.DX[4] = dn + this.DX[1] - 2.0 * this.C[2];
+                    const PI2 = 2 * Math.PI;
+                    for (let i = 0; i < 5; i++) {
+                        if (this.DX[i] < 0.0) this.DX[i] += PI2;
+                        if (ird !== 1)
+                            this.DX[i] = (this.DX[i] * 180.0) / Math.PI;
+                    }
+                    return this.DX;
+                }
+
+                timcof(y) {
+                    const y0 = y - 1900.0;
+                    const C = [
+                        0.45987564,
+                        0.05490056,
+                        5.14537628,
+                        y0,
+                        0.01675104 - 4.18e-7 * y0,
+                        23.452294 - 1.30111e-4 * y0,
+                    ];
+                    const dr = Math.PI / 180.0;
+                    const S2 = Math.sin(C[2] * dr);
+                    const S5 = Math.sin(C[5] * dr);
+                    const C12 = Math.cos(C[5] * 0.5 * dr);
+                    const C13 = Math.cos(C[2] * 0.5 * dr);
+                    this.A[0] = Math.cos(C[2] * dr) * Math.cos(C[5] * dr);
+                    this.A[1] = S2 * S5;
+                    this.A[2] =
+                        Math.cos(((C[5] - C[2]) / 2.0) * dr) /
+                        Math.cos(((C[5] + C[2]) / 2.0) * dr);
+                    this.A[3] =
+                        Math.sin(((C[5] - C[2]) / 2.0) * dr) /
+                        Math.sin(((C[5] + C[2]) / 2.0) * dr);
+                    const c15 =
+                        (C[0] * (1.0 + 1.5 * C[4] * C[4])) /
+                        (1.0 + 1.5 * C[1] * C[1]);
+                    this.A[4] = c15 * Math.sin(C[5] * 2.0 * dr);
+                    this.A[5] = c15 * S5 * S5;
+                    const c14 = 1.0 - 1.5 * S2 * S2;
+                    this.B[1] =
+                        1.0 /
+                        Math.pow(
+                            this.A[4] + c14 * Math.sin(C[5] * 2.0 * dr),
+                            2,
+                        );
+                    this.B[2] = 1.0 / Math.pow(this.A[5] + c14 * S5 * S5, 2);
+                    this.B[0] = 1.0 / Math.pow(C12 * C13, 4);
+                    this.B[3] =
+                        1.0 / (Math.pow(C12, 2) * Math.pow(C13, 4) * S5);
+                    this.B[4] = 2.0 * this.A[4] * this.B[1];
+                    this.B[5] = 2.0 * this.A[5] * this.B[2];
+                    this.B[6] = this.B[1] * this.A[4] * this.A[4];
+                }
+
+                nlong(y, ird) {
+                    const y0 = y - 1900.0;
+                    const tr = Math.floor((Math.floor(y0) - 1) / 4) + 0.5;
+                    const t = (365.0 * y0 + tr) / 36525.0;
+                    let dn = 259.182533 - 1934.142397 * t + 0.002106 * t * t;
+                    while (dn < 0.0) dn += 360.0;
+                    return ird === 0 ? dn : (dn * Math.PI) / 180.0;
+                }
+
+                vzerou(y, yh, ird) {
+                    let af = 360.0,
+                        a4 = 90.0,
+                        a34 = 270.0;
+                    if (ird === 1) {
+                        const dr = Math.PI / 180.0;
+                        af *= dr;
+                        a4 *= dr;
+                        a34 *= dr;
+                    }
+                    this.hsplon(y, ird);
+                    this.inuxi(yh, ird);
+                    const dv = [
+                        2.0 *
+                            (this.DL[0] - this.DL[1] + this.DX[4] - this.DX[1]),
+                        0.0,
+                        2.0 * (this.DL[0] + this.DX[4] - this.DX[1]) -
+                            3.0 * this.DL[1] +
+                            this.DL[2],
+                        2.0 * this.DL[0] - this.DX[3],
+                        this.DL[0] + a4 - this.DX[2],
+                        this.DL[0] -
+                            2.0 * this.DL[1] +
+                            a34 +
+                            2.0 * this.DX[4] -
+                            this.DX[1],
+                        a34 - this.DL[0],
+                    ];
+                    for (let i = 0; i < 7; i++) {
+                        if (i === 1) {
+                            this.V0U[1] = 0.0;
+                            continue;
+                        }
+                        let val = dv[i] + af;
+                        while (val < 0.0) val += af;
+                        this.V0U[i] = val % af;
+                    }
+                }
+
+                hsplon(y, ird) {
+                    const y0 = y - 1900.0;
+                    const tr = Math.floor((Math.floor(y0) - 1) / 4) + 0.5;
+                    const t = (365.0 * y0 + tr) / 36525.0;
+                    this.DL[0] = (279.696678 + 36000.768925 * t) % 360.0;
+                    this.DL[1] = (270.437422 + 481267.892 * t) % 360.0;
+                    this.DL[2] = (334.328019 + 4069.032206 * t) % 360.0;
+                    if (ird !== 0) {
+                        const dr = Math.PI / 180.0;
+                        for (let i = 0; i < 3; i++) this.DL[i] *= dr;
+                    }
+                }
+            }
+
+            /**
+             * Chart Plugin: Draws solid night shading ranges in the background
+             */
+            const nightRangePlugin = {
+                id: "nightRange",
+                beforeDatasetsDraw: (chart, args, options) => {
+                    const {
+                        ctx,
+                        chartArea: { top, bottom, left, right },
+                        scales: { x },
+                    } = chart;
+                    const ranges = options.ranges;
+                    if (!ranges || ranges.length === 0) return;
+
+                    ctx.save();
+                    ctx.fillStyle = options.color || "rgba(15, 23, 42, 0.12)";
+
+                    ranges.forEach((range) => {
+                        const startX = x.getPixelForValue(
+                            Math.round(range.start * 2),
+                        );
+                        const endX = x.getPixelForValue(
+                            Math.round(range.end * 2),
+                        );
+
+                        const drawX = Math.max(left, startX);
+                        const drawW = Math.min(right, endX) - drawX;
+
+                        if (drawW > 0) {
+                            ctx.fillRect(drawX, top, drawW, bottom - top);
+                        }
+                    });
+                    ctx.restore();
+                },
+            };
+
+            Chart.register(nightRangePlugin);
+
+            let chart = null;
+            const dateInput = document.getElementById("dateInput");
+
+            function getTideHeight(arcots, hoursFromStartOfYear) {
+                let height = 0;
+                const speeds = Arcots.S;
+                for (let i = 0; i < 7; i++) {
+                    height +=
+                        arcots.FH[i] *
+                        Math.cos(
+                            speeds[i] * hoursFromStartOfYear + arcots.VUG[i],
+                        );
+                }
+                return height;
+            }
+
+            function getMoonPhaseInfo(date) {
+                const moon = SunCalc.getMoonIllumination(date);
+                const phases = [
+                    { name: "Mlaj", emoji: "🌑" },
+                    { name: "Prvi krajec (rastoči srp)", emoji: "🌒" },
+                    { name: "Prvi četrtina", emoji: "🌓" },
+                    { name: "Rastoči izbočeni mesec", emoji: "🌔" },
+                    { name: "Polna luna (ščip)", emoji: "🌕" },
+                    { name: "Padajoči izbočeni mesec", emoji: "🌖" },
+                    { name: "Zadnji četrtina", emoji: "🌗" },
+                    { name: "Zadnji krajec (padajoči srp)", emoji: "🌘" },
+                ];
+                const phaseIndex = Math.floor(moon.phase * 8 + 0.5) % 8;
+                return {
+                    ...phases[phaseIndex],
+                    age: (moon.phase * 29.53).toFixed(1),
+                };
+            }
+
+            function getHoursSinceYearStart(date) {
+                const startOfYear = new Date(date.getFullYear(), 0, 1);
+                return (date - startOfYear) / (1000 * 60 * 60);
+            }
+
+            function shiftDate(delta) {
+                const currentVal = dateInput.value;
+                if (!currentVal) return;
+                const date = new Date(currentVal);
+                date.setDate(date.getDate() + delta);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, "0");
+                const day = String(date.getDate()).padStart(2, "0");
+                dateInput.value = `${year}-${month}-${day}`;
+                updateForecast();
+            }
+
+            function findExtremes(arcots, startHours) {
+                const extremes = [];
+                for (let t = startHours; t <= startHours + 48; t += 0.1) {
+                    const hPrev = getTideHeight(arcots, t - 0.1);
+                    const hCurr = getTideHeight(arcots, t);
+                    const hNext = getTideHeight(arcots, t + 0.1);
+                    if (
+                        (hCurr > hPrev && hCurr > hNext) ||
+                        (hCurr < hPrev && hCurr < hNext)
+                    ) {
+                        const type = hCurr > hPrev ? "Visoka" : "Nizka";
+                        const date = new Date(
+                            new Date(arcots.year, 0, 1).getTime() + t * 3600000,
+                        );
+                        extremes.push({
+                            type,
+                            time: date.toLocaleString([], {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                            }),
+                            height: hCurr,
+                            relTime: t - startHours,
+                        });
+                    }
+                }
+                return extremes;
+            }
+
+            function updateForecast() {
+                const dateStr = dateInput.value;
+                if (!dateStr) return;
+
+                const selectedDate = new Date(dateStr + "T00:00:00");
+                const year = selectedDate.getFullYear();
+                const arcots = new Arcots(year);
+                const startHours = getHoursSinceYearStart(selectedDate);
+
+                const moon = getMoonPhaseInfo(selectedDate);
+                document.getElementById("moonEmoji").innerText = moon.emoji;
+                document.getElementById("moonName").innerText = moon.name;
+                document.getElementById("moonAge").innerText =
+                    `Starost: ${moon.age} dni`;
+
+                const labels = [];
+                const data = [];
+                for (let i = 0; i <= 48; i += 0.5) {
+                    const h = startHours + i;
+                    const time = new Date(selectedDate.getTime() + i * 3600000);
+                    labels.push(
+                        time.toLocaleTimeString([], {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                        }),
+                    );
+                    data.push(getTideHeight(arcots, h));
+                }
+
+                const nightRanges = [];
+                for (let d = 0; d <= 2; d++) {
+                    const refDate = new Date(
+                        selectedDate.getTime() + (d * 24 + 12) * 3600000,
+                    );
+                    const solar = SunCalc.getTimes(
+                        refDate,
+                        STATION_LAT,
+                        STATION_LON,
+                    );
+                    const sunriseRel = (solar.sunrise - selectedDate) / 3600000;
+                    const sunsetRel = (solar.sunset - selectedDate) / 3600000;
+                    const dayStart = d * 24;
+                    const dayEnd = (d + 1) * 24;
+
+                    if (sunriseRel > dayStart) {
+                        const start = Math.max(0, dayStart);
+                        const end = Math.min(48, sunriseRel);
+                        if (end > start) nightRanges.push({ start, end });
+                    }
+                    if (sunsetRel < dayEnd) {
+                        const start = Math.max(0, sunsetRel);
+                        const end = Math.min(48, dayEnd);
+                        if (end > start) nightRanges.push({ start, end });
+                    }
+                }
+
+                const extremes = findExtremes(arcots, startHours);
+                const extremesData = labels.map(() => null);
+                const extremeLabels = labels.map(() => null);
+
+                extremes.forEach((ex) => {
+                    const idx = Math.round(ex.relTime * 2);
+                    if (idx >= 0 && idx < extremesData.length) {
+                        extremesData[idx] = ex.height;
+                        extremeLabels[idx] = ex.type + " Tide";
+                    }
+                });
+
+                const now = new Date();
+                const timeDiff = (now - selectedDate) / 3600000;
+                let nowDataset = null;
+                if (timeDiff >= 0 && timeDiff <= 48) {
+                    const currentHeight = getTideHeight(
+                        arcots,
+                        startHours + timeDiff,
+                    );
+                    const closestIdx = Math.round(timeDiff * 2);
+                    if (closestIdx >= 0 && closestIdx < labels.length) {
+                        nowDataset = {
+                            label: "Current Time",
+                            data: labels.map((_, i) =>
+                                i === closestIdx ? currentHeight : null,
+                            ),
+                            pointBackgroundColor: "#22c55e",
+                            pointBorderColor: "#fff",
+                            pointBorderWidth: 2,
+                            pointRadius: 7,
+                            showLine: false,
+                            zIndex: 30,
+                        };
+                    }
+                }
+
+                const listEl = document.getElementById("extremesList");
+                let tableHtml = `
+                <table class="w-full text-left border-collapse text-[13px]">
+                    <thead>
+                        <tr class="text-[10px] uppercase text-slate-400 border-b border-slate-100">
+                            <th class="py-2 font-semibold">Dogodek</th>
+                            <th class="py-2 font-semibold">Ura</th>
+                            <th class="py-2 text-right font-semibold">Višina</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+                extremes.forEach((ex) => {
+                    const typeColor =
+                        ex.type === "Visoka"
+                            ? "text-blue-600"
+                            : "text-slate-600";
+                    const bgColor =
+                        ex.type === "Visoka"
+                            ? "bg-blue-50/40"
+                            : "bg-slate-50/40";
+                    tableHtml += `
+                    <tr class="${bgColor} border-b border-slate-50">
+                        <td class="py-2 font-bold uppercase text-[10px] tracking-wider ${typeColor}">${ex.type}</td>
+                        <td class="py-2 text-slate-500 font-mono text-[11px]">${ex.time}</td>
+                        <td class="py-2 font-bold text-slate-800 text-right">${ex.height.toFixed(1)} cm</td>
+                    </tr>
+                `;
+                });
+
+                tableHtml += `</tbody></table>`;
+                listEl.innerHTML = tableHtml;
+
+                const min = Math.min(...data);
+                const max = Math.max(...data);
+                document.getElementById("rangeStat").innerText =
+                    `${(max - min).toFixed(1)} cm`;
+
+                if (chart) chart.destroy();
+                const ctx = document
+                    .getElementById("tideChart")
+                    .getContext("2d");
+
+                const datasets = [
+                    {
+                        label: "Water Level (cm)",
+                        data: data,
+                        borderColor: "#2563eb",
+                        backgroundColor: "rgba(37, 99, 235, 0.2)", // Semi-transparent blue for areas above/below 0
+                        fill: "origin", // This fills the area between the line and the 0 line
+                        tension: 0.4,
+                        pointRadius: 0,
+                        borderWidth: 2,
+                        zIndex: 10,
+                    },
+                    {
+                        label: "Extremes",
+                        data: extremesData,
+                        pointBackgroundColor: "#f97316",
+                        pointBorderColor: "#fff",
+                        pointBorderWidth: 1.5,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        showLine: false,
+                        zIndex: 20,
+                        customLabels: extremeLabels,
+                    },
+                ];
+
+                if (nowDataset) datasets.push(nowDataset);
+
+                chart = new Chart(ctx, {
+                    type: "line",
+                    data: { labels: labels, datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { intersect: false, mode: "index" },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                min: Math.floor(min - 5),
+                                max: Math.ceil(max + 5),
+                                title: {
+                                    display: true,
+                                    text: "Height Relative to Mean (cm)",
+                                    color: "#64748b",
+                                },
+                                grid: { color: "#f1f5f9" },
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: {
+                                    maxRotation: 0,
+                                    autoSkip: true,
+                                    maxTicksLimit: 12,
+                                    color: "#64748b",
+                                },
+                            },
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: "#1e293b",
+                                padding: 12,
+                                cornerRadius: 8,
+                                callbacks: {
+                                    label: (context) => {
+                                        const dataset = context.dataset;
+                                        const value = context.parsed.y;
+                                        if (dataset.label === "Extremes") {
+                                            const type =
+                                                dataset.customLabels[
+                                                    context.dataIndex
+                                                ];
+                                            return `${type}: ${value.toFixed(1)} cm`;
+                                        }
+                                        if (dataset.label === "Current Time") {
+                                            return `Trenutno: ${value.toFixed(1)} cm`;
+                                        }
+                                        return `Višina: ${value.toFixed(1)} cm`;
+                                    },
+                                },
+                                filter: (tooltipItem) =>
+                                    tooltipItem.datasetIndex !== 0 ||
+                                    !extremesData[tooltipItem.dataIndex],
+                            },
+                            nightRange: {
+                                ranges: nightRanges,
+                                color: "rgba(15, 23, 42, 0.12)",
+                            },
+                        },
+                    },
+                });
+            }
+
+            window.onload = () => {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, "0");
+                const day = String(today.getDate()).padStart(2, "0");
+                dateInput.value = `${year}-${month}-${day}`;
+                updateForecast();
+            };
+
+            document
+                .getElementById("updateBtn")
+                .addEventListener("click", updateForecast);
+            document
+                .getElementById("prevDay")
+                .addEventListener("click", () => shiftDate(-1));
+            document
+                .getElementById("nextDay")
+                .addEventListener("click", () => shiftDate(1));
+            dateInput.addEventListener("change", updateForecast);
+        </script>
+    </body>
+</html>

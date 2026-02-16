@@ -16,6 +16,8 @@ This project calculates and visualizes tide heights throughout the day using the
 - Date navigation (previous/next day, date picker)
 - Smooth area-spline visualization
 - Current tide level indicator
+- Moon phase prediction
+- Day/night periods marked with gray shading on the chart
 
 ## Project Structure
 
@@ -112,4 +114,6 @@ This project is provided as-is for educational and practical use.
 
 ## Author
 
-Developed for tide prediction in Koper Bay, Slovenia
+Developed for tide prediction in Koper Bay, Slovenia.
+
+This project is inherited from the [Morska biološka postaja Piran](http://www.mbss.org/) (Marine Biology Station Piran) website, adapted and enhanced for modern web standards.

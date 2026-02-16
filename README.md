@@ -116,4 +116,4 @@ This project is provided as-is for educational and practical use.
 
 Developed for tide prediction in Koper Bay, Slovenia.
 
-This project is inherited from the [Morska biološka postaja Piran](http://www.mbss.org/) (Marine Biology Station Piran) website, adapted and enhanced for modern web standards.
+This project is inherited from the [Morska biološka postaja Piran](https://www.nib.si/mbp/sl/) (Marine Biology Station Piran) website, adapted and enhanced for modern web standards.
